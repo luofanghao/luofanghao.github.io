@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>Caffe 使用总结 2：单一操作 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="1. Forwardforward propagation（fp）:">
+<meta name="keywords" content="Caffe">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Caffe 使用总结 2：单一操作">
+<meta property="og:url" content="http://luofanghao.github.io/blog/2016/06/28/caffe使用总结2/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="1. Forwardforward propagation（fp）:">
+<meta property="og:updated_time" content="2016-07-01T08:21:16.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Caffe 使用总结 2：单一操作">
+<meta name="twitter:description" content="1. Forwardforward propagation（fp）:">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/blog/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/blog/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/blog/">Home</a>
+        
+          <a class="main-nav-link" href="/blog/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://luofanghao.github.io/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-caffe使用总结2" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/blog/2016/06/28/caffe使用总结2/" class="article-date">
+  <time datetime="2016-06-28T18:57:04.000Z" itemprop="datePublished">2016-06-28</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/blog/categories/Caffe/">Caffe</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      Caffe 使用总结 2：单一操作
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-Forward"><a href="#1-Forward" class="headerlink" title="1. Forward"></a>1. Forward</h2><p>forward propagation（fp）:</p>
+<a id="more"></a>
+<ul>
+<li>matlab:</li>
+</ul>
+<p>形式1:</p>
+<blockquote>
+<p>res = net.forward({data}); </p>
+</blockquote>
+<p>data是原始数据；返回值res是fp到最后一层的输出，在matlab中它是一个cell变量，通过下面命令可以获取其中值</p>
+<blockquote>
+<p>prob = res{1};</p>
+</blockquote>
+<p>prob即为输出，其大小为 d*n, d为最后一层定义的dimension， n为batch size</p>
+<p>形式2:</p>
+<figure class="highlight matlab"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">net.blobs(<span class="string">'data'</span>).set_data(data);</div><div class="line">net.forward_prefilled();   		<span class="comment">%notice the function used here</span></div><div class="line">prob = net.blobs(<span class="string">'prob'</span>).get_data();</div></pre></td></tr></table></figure>
+<p>这种形式是通过之前介绍的对blob的操作，直接把data放入，然后调用forward_prefiled()函数进行fp操作。对最后一层get_data()即为最后的输出</p>
+<p>值得注意的是，无论形式1或者是形式2，其实整个net已经完成了fp，想取得某一层的featue map都可以通过之前介绍的blob操作完成。例如：</p>
+<blockquote>
+<p>pool5_feat = net.blobs(‘pool5’).get_data();<br>可以得到pool5层的feature map</p>
+</blockquote>
+<ul>
+<li>python:</li>
+</ul>
+<p>net.forward()返回值是一个字典，key为每一层的名字，值为每一层的feature map。此外，还可以选择forward到某一层：</p>
+<blockquote>
+<p>net.forward(end=’fc8’)[‘fc8’]</p>
+</blockquote>
+<p>这句讲返回fp到fc8层的feature map</p>
+<h2 id="2-Backward"><a href="#2-Backward" class="headerlink" title="2. Backward"></a>2. Backward</h2><p>backward propagation (bp):</p>
+<p>Caffe默认是禁止这样操作bp的，想通过这种方法，需要在deploy.prototxt 中加入’force_backward: true’。加过之后，以下方法生效：</p>
+<p>实际上，与fp基本一样，只需要把需要拿到的值从data变成了diff而已</p>
+<ul>
+<li>matlab:</li>
+</ul>
+<p>形式1</p>
+<figure class="highlight matlab"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">res = net.backward(&#123;prob_diff&#125;);</div><div class="line">data_diff = res&#123;<span class="number">1</span>&#125;;</div></pre></td></tr></table></figure>
+<p>prob_diff为最后一层的初始gradient（实际中，是通过与ground truth label的计算得出的）<br>data_diff为bp到第一层产生的gradient</p>
+<p>形式2</p>
+<figure class="highlight matlab"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">net.blobs(<span class="string">'prob'</span>).set_diff(prob_diff);</div><div class="line">net.backward_prefilled();</div><div class="line">data_diff = net.blobs(<span class="string">'data'</span>).get_diff();</div></pre></td></tr></table></figure>
+<ul>
+<li>python</li>
+</ul>
+<blockquote>
+<p>net.backward(start=’fc8’)[‘data’]</p>
+</blockquote>
+<p>这句将返回从fc8开始bp，到原始数据的gradient</p>
+<h2 id="3-Reshape"><a href="#3-Reshape" class="headerlink" title="3. Reshape"></a>3. Reshape</h2><p>deploy.prototxt中已经定义好了网络的结构，包括data层中对原始数据的要求。比如对于caffenet，其定义是：</p>
+<blockquote>
+<p>input_param { shape: { dim: 10 dim: 3 dim: 227 dim: 227 } }</p>
+</blockquote>
+<p>值得注意的是，在matlab中，这个顺序是反的，即为：[width, height, channels, num]<br>因此，如果我们想通过matlab 接口直接修改batch size，而不动deploy.prototxt文件，可以通过对data层进行reshape：</p>
+<figure class="highlight matlab"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">net.blobs(<span class="string">'data'</span>).<span class="built_in">reshape</span>([<span class="number">227</span> <span class="number">227</span> <span class="number">3</span> <span class="number">1</span>]); <span class="comment">% reshape blob 'data'</span></div><div class="line">net.<span class="built_in">reshape</span>();</div></pre></td></tr></table></figure>
+<p>这样，整个网络的大小也会发生改变，比如 net.blobs(‘prob’).shape的结果就会从［1000，10］变为［1000，1］了</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://luofanghao.github.io/blog/2016/06/28/caffe使用总结2/" data-id="cj94ikx7f0002z48cstp3n0dr" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/blog/tags/Caffe/">Caffe</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/blog/2016/06/29/caffe使用总结3/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Caffe 使用总结 3：整体训练
+        
+      </div>
+    </a>
+  
+  
+    <a href="/blog/2016/06/27/caffe使用总结/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">Caffe 使用总结1：数据访问</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/blog/categories/Caffe/">Caffe</a></li><li class="category-list-item"><a class="category-list-link" href="/blog/categories/论文笔记/">论文笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/blog/categories/随笔/">随笔</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Caffe/">Caffe</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Model-Compression/">Model Compression</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Semantic-Segmentation/">Semantic Segmentation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/entropy/">entropy</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/blog/tags/Caffe/" style="font-size: 20px;">Caffe</a> <a href="/blog/tags/Model-Compression/" style="font-size: 15px;">Model Compression</a> <a href="/blog/tags/Semantic-Segmentation/" style="font-size: 10px;">Semantic Segmentation</a> <a href="/blog/tags/entropy/" style="font-size: 10px;">entropy</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2015/11/">November 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/blog/2017/10/23/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/24/论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》/">论文笔记 《FitNets- Hints for Thin Deep Nets》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/20/论文笔记 《Distilling the Knowledge in a Neural Network》/">论文笔记 《Distilling the Knowledge in a Neural Network》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/01/论文笔记 《Fully Convolutional Networks for Semantic Segmentation》/">论文笔记 《Fully Convolutional Networks for Semantic Segmentation》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/06/29/caffe使用总结3/">Caffe 使用总结 3：整体训练</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/blog/" class="mobile-nav-link">Home</a>
+  
+    <a href="/blog/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+  <script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/blog/js/script.js"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>论文笔记 《FitNets- Hints for Thin Deep Nets》 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="OK, 这是 Model Compression系列的第二篇文章&amp;lt; FitNets: Hints for Thin Deep Nets &amp;gt;。在发表的时间顺序上也是在&amp;lt; Distilling the Knowledge in a Neural Network &amp;gt;之后的。FitNet事实上也是使用了KD的做法。 这片paper在introduction就很好地总结了一下前几个M">
+<meta name="keywords" content="Model Compression">
+<meta property="og:type" content="article">
+<meta property="og:title" content="论文笔记 《FitNets- Hints for Thin Deep Nets》">
+<meta property="og:url" content="http://luofanghao.github.io/blog/2016/07/24/论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="OK, 这是 Model Compression系列的第二篇文章&amp;lt; FitNets: Hints for Thin Deep Nets &amp;gt;。在发表的时间顺序上也是在&amp;lt; Distilling the Knowledge in a Neural Network &amp;gt;之后的。FitNet事实上也是使用了KD的做法。 这片paper在introduction就很好地总结了一下前几个M">
+<meta property="og:image" content="http://luofanghao.github.io/images/fitnet1.jpg">
+<meta property="og:image" content="http://luofanghao.github.io/images/fitnet2.jpg">
+<meta property="og:image" content="http://luofanghao.github.io/images/fitnet3.jpg">
+<meta property="og:image" content="http://luofanghao.github.io/images/fitnet4.jpg">
+<meta property="og:updated_time" content="2016-07-25T07:45:54.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="论文笔记 《FitNets- Hints for Thin Deep Nets》">
+<meta name="twitter:description" content="OK, 这是 Model Compression系列的第二篇文章&amp;lt; FitNets: Hints for Thin Deep Nets &amp;gt;。在发表的时间顺序上也是在&amp;lt; Distilling the Knowledge in a Neural Network &amp;gt;之后的。FitNet事实上也是使用了KD的做法。 这片paper在introduction就很好地总结了一下前几个M">
+<meta name="twitter:image" content="http://luofanghao.github.io/images/fitnet1.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/blog/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/blog/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/blog/">Home</a>
+        
+          <a class="main-nav-link" href="/blog/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://luofanghao.github.io/blog"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/blog/2016/07/24/论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》/" class="article-date">
+  <time datetime="2016-07-24T22:47:37.000Z" itemprop="datePublished">2016-07-24</time>
+</a>
+    
+  <div class="article-category">
+    <a class="article-category-link" href="/blog/categories/论文笔记/">论文笔记</a>
+  </div>
+
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      论文笔记 《FitNets- Hints for Thin Deep Nets》
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>OK, 这是 Model Compression系列的第二篇文章<a href="https://arxiv.org/abs/1412.6550" target="_blank" rel="external">&lt; FitNets: Hints for Thin Deep Nets &gt;</a>。在发表的时间顺序上也是在<a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="external">&lt; Distilling the Knowledge in a Neural Network &gt;</a>之后的。FitNet事实上也是使用了KD的做法。</p>
+<p>这片paper在introduction就很好地总结了一下前几个Model Compression paper的工作，这里稍做总结：</p>
+<ul>
+<li><a href="http://arxiv.org/abs/1312.6184" target="_blank" rel="external">&lt; Do Deep Nets Really Need to be Deep? &gt;</a>主体为了突出<strong>“一个模型的复杂，不一定代表他的表达也是复杂的”</strong>。主要是用浅层的网络mimic了一个深层的网络（然而这两个网络的size是相同的）然后达到了相似的performance。其中的loss是两个网络最后的logits之间的距离。顺便值得一说的是，这篇paper中提到，需要用尽可能多的unlabeled data（不是从training set中的）来mimic，才会使student model能尽可能接近teacher model。后面这几篇应该也用了类似的方法。</li>
+<li><a href="https://arxiv.org/abs/1503.02531" target="_blank" rel="external">&lt; Distilling the Knowledge in a Neural Network &gt;</a>主要在于改变了loss，不单单是使用logits，这点就不赘述了，上一片笔记<a href="http://luofanghao.github.io/2016/07/20/论文笔记%20《Distilling%20the%20Knowledge%20in%20a%20Neural%20Network》/" target="_blank" rel="external">Distilling the Knowledge in a Neural Network笔记</a>中有详细解释。</li>
+</ul>
+<a id="more"></a>
+<h2 id="Intuition"><a href="#Intuition" class="headerlink" title="Intuition"></a>Intuition</h2><p>然后开始提到自己这个work的motivation：deep是DNN主要的功效来源，而前几个work都没有在这方面有所发展，于是这篇paper的主题就是如何去mimic一个更深但是比较小的网络，所期望的自然是他这个更深的网络能有更佳的performance。</p>
+<p>所使用的方法直觉上来讲也是直接的：既然网络很深直接训练会困难，那就通过在中间层加入loss的方法，如此分成两块来训练，应该能得到更好的结果。至于中间的loss怎么来？自然就是通过teacher network的中间feature map来得到的。paper中把这个方法叫做Hint-based Training (<strong>HT</strong>)</p>
+<h2 id="Methodology"><a href="#Methodology" class="headerlink" title="Methodology"></a>Methodology</h2><p>这一节详细描述一下Hint-based Training</p>
+<p><img src="/images/fitnet1.jpg" alt="figure1"></p>
+<p>如上图，之所以有Wr是因为teacher network的层输出与小网络的往往是不一样的，因此需要这样一个mapping来匹配，并且这个mapping也是需要学习的。paper中提到说用多加一个conv层的方法比较节省参数（其实也比较符合逻辑），然后这个conv层不加padding，不stride。下面是一个公式表述：</p>
+<p><img src="/images/fitnet2.jpg" alt="figure2"></p>
+<p>实际的训练过程如下图所示。</p>
+<p><img src="/images/fitnet3.jpg" alt="figure1"><br>图中过程写的比较复杂，实际上只是做了两步：</p>
+<ol>
+<li>通过HT来训练前半层</li>
+<li>通过KD来训练整个网络</li>
+</ol>
+<p>最后的效果居然比teacher网络还要好，非常吃惊</p>
+<p><img src="/images/fitnet4.jpg" alt="figure1"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://luofanghao.github.io/blog/2016/07/24/论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》/" data-id="cj94ikx7y000bz48ch95c5t8i" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/blog/tags/Model-Compression/">Model Compression</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/blog/2017/10/23/hello-world/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          Hello World
+        
+      </div>
+    </a>
+  
+  
+    <a href="/blog/2016/07/20/论文笔记 《Distilling the Knowledge in a Neural Network》/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">论文笔记 《Distilling the Knowledge in a Neural Network》</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Categories</h3>
+    <div class="widget">
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/blog/categories/Caffe/">Caffe</a></li><li class="category-list-item"><a class="category-list-link" href="/blog/categories/论文笔记/">论文笔记</a></li><li class="category-list-item"><a class="category-list-link" href="/blog/categories/随笔/">随笔</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Caffe/">Caffe</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Model-Compression/">Model Compression</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/Semantic-Segmentation/">Semantic Segmentation</a></li><li class="tag-list-item"><a class="tag-list-link" href="/blog/tags/entropy/">entropy</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/blog/tags/Caffe/" style="font-size: 20px;">Caffe</a> <a href="/blog/tags/Model-Compression/" style="font-size: 15px;">Model Compression</a> <a href="/blog/tags/Semantic-Segmentation/" style="font-size: 10px;">Semantic Segmentation</a> <a href="/blog/tags/entropy/" style="font-size: 10px;">entropy</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2017/10/">October 2017</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2016/07/">July 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2016/06/">June 2016</a></li><li class="archive-list-item"><a class="archive-list-link" href="/blog/archives/2015/11/">November 2015</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/blog/2017/10/23/hello-world/">Hello World</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/24/论文笔记-《FitNets-Hints-for-Thin-Deep-Nets》/">论文笔记 《FitNets- Hints for Thin Deep Nets》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/20/论文笔记 《Distilling the Knowledge in a Neural Network》/">论文笔记 《Distilling the Knowledge in a Neural Network》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/07/01/论文笔记 《Fully Convolutional Networks for Semantic Segmentation》/">论文笔记 《Fully Convolutional Networks for Semantic Segmentation》</a>
+          </li>
+        
+          <li>
+            <a href="/blog/2016/06/29/caffe使用总结3/">Caffe 使用总结 3：整体训练</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2017 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/blog/" class="mobile-nav-link">Home</a>
+  
+    <a href="/blog/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/blog/fancybox/jquery.fancybox.css">
+  <script src="/blog/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/blog/js/script.js"></script>
+
+  </div>
+</body>
+</html>
